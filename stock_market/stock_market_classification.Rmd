@@ -1,0 +1,97 @@
+---
+title: "Classification of Stock Market Data"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+bibliography: stock_market_classification.bib
+csl: ../ieee.csl
+---
+
+# Overview
+
+The `Smarket` dataset from the `ISLR2` package contains stock market data of _S&P 500_ over 1250 days between 2001 and 2005 [@ISLR:Chapter4].
+
+# Goal
+
+Predict `Direction` for future observations based on the other features.
+
+# Imports
+```{r}
+library(ISLR2)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(e1071)
+```
+
+# Dataset characteristics
+
+```{r}
+# Load dataset
+data(Smarket)
+
+# Columns
+colnames(Smarket)
+# Structure
+str(Smarket)
+# Summary
+summary(Smarket)
+```
+
+# Preparing modeling
+
+```{r}
+set.seed(120)
+
+# Observations before 2005
+partition.train <- Smarket |> filter(Year < 2005)
+
+# Observations in 2005
+partition.test <- Smarket |> filter(Year == 2005)
+
+# Verification of partitioning
+
+summary(partition.train$Year)
+summary(partition.test$Year)
+
+# Row numbers of the two partitions
+
+nrow(partition.train)
+nrow(partition.test)
+```
+
+# Modeling
+
+```{r}
+# Model based on the predictor Lag1 of the training partition
+model.on.lag1 <- naiveBayes(Direction ~ Lag1, partition.train)
+
+print(model.on.lag1)
+
+# Predict on testing partition
+classf.test <- predict(model.on.lag1, partition.test)
+
+# Confusion of prediction
+
+classf.test.confusion <- confusionMatrix(classf.test, partition.test$Direction)
+
+classf.test.confusion$table |> 
+  as.data.frame() |> 
+  ggplot(aes(Reference, Prediction, fill = Freq)) +
+    geom_tile() +
+    geom_text(aes(label = Freq), col = "white", size = 6) +
+    scale_fill_gradient(low = "black", high = "purple") +
+    labs(
+      title = "Confusion matrix of predicted Direction of S&P 500",
+      subtitle = "trained on Lag1 feature between [2001, 2005),\nevaluated on observations from 2005"
+    ) +
+    theme_bw()
+
+# Accuracy
+print(classf.test.confusion$overall |> round(4))
+```
+
+Accuracy of the above model is ~**55.16%**, given there are $252$ rows in the _test partition_ and the number of successfully labeled observations is $114 + 25 = 139$.
+
+
+# References
