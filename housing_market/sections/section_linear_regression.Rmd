@@ -1,0 +1,60 @@
+# Linear Regression
+
+Another task of the project is to perform a regression, to predict _median home value_ based on a suitable predictor.
+
+It has been shown that the target variable exhibits correlation with the _average rooms_ one. Since they seem to align in a linear fashion, a regression of linear would suit the needs.
+
+```{r}
+# linear regression
+df.housing.imputed.refined |>
+  ggplot(aes(average_rooms, median_home_value)) +
+  geom_point(
+    shape = 21,
+    size = 2.5,
+    color = "cornflowerblue"
+  ) +
+  geom_smooth(
+    formula = y ~ x,
+    method = "lm",
+    se = FALSE,
+    col = "coral",
+    fullrange = TRUE
+  ) +
+  scale_x_continuous(
+    limits = c(0, 12),
+    breaks = 0:12
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 100, by = 5)
+  ) +
+  labs(
+    title = "Linear regression scatterplot of Average Rooms vs Median Home Value",
+    x = "Average Rooms",
+    y = "Median Home Value"
+  )
+```
+
+```{r}
+# linear regression model
+
+mdl.linear_regression <- lm(
+  formula = median_home_value ~ average_rooms,
+  data = df.housing.imputed.refined
+)
+
+mdl.linear_regression |>
+  summary()
+```
+
+According to the linear regression model, the regression line intercepts the ordinate at $3.7854$ and has a slope of $7.1886$, from which the following regression equation can be drawn:
+  
+$$
+\begin{split}
+\hat{y}(x) = \beta_0 + \beta_1\times{x} \\
+\hat{y}(x)  = 3.7854 + 7.1886\times{x}
+\end{split}
+$$
+
+With missing values being replaced, the coefficient of determination ($R^2$) indicates that around $75\%$ of the variation of the dependent variable _(median home value)_ can be accounted for the independent variable _(average rooms)_.
+
+This linear regression model indicates that, on average, each additional _room_ results in a $\$7188.6$ increase in the _median home value_.

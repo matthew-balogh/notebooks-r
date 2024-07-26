@@ -1,0 +1,478 @@
+# Hypothesis Test
+
+One of the tasks of the project is to perform a hypothesis test regarding to the impact of crime rates on the median home values.
+
+The objective is to determine if there's a statistically significant difference in the median home values of neighborhoods with high crime rates compared to areas with low crime rates.
+
+The _null_ and _alternative hypotheses_ are stated as follows:
+
+$$
+\begin{split}
+H_0:\text{There is no difference between the median home values of high and low crime-rate neighborhoods.} \\
+H_A:\text{There is a difference between the median home values of high and low crime-rate neighborhoods.}
+\end{split}
+$$
+
+The hypotheses can be expressed using the population means ($\mu_L$ for low crime-rate areas, $\mu_H$ for high crime-rate areas) as follows:
+
+$$
+\begin{split}
+H_0: \mu_L - \mu_H = 0 \\
+H_A: \mu_L - \mu_H \neq 0
+\end{split}
+$$
+
+According to the above hypotheses, the test is a two-sided test, where the _significance level_ and _confidence interval_ are respectively the following:
+
+$$
+\begin{split}
+\alpha = 5\% = 0.05 \\
+CI = (1-\alpha) = 95\% = 0.95
+\end{split}
+$$
+
+Since we need to use two samples to estimate the appropriate populations, the given dataset shall be split into two, based on the crime rate. First, the median value of the crime rate is designated as a threshold ($T$), at which the two crime rate categories will be separated from each other.
+
+$$
+\begin{split}
+T = median(\text{Crime Rate}) \\
+Crime \ Category(x) = \begin{cases}
+  High, & \text{if } x \ge T, \\
+  Low, & \text{otherwise}.
+\end{cases}
+\end{split}
+$$
+
+## Refine Imputation
+
+Before further proceeding in the hypothesis test, we must address the fact that missing data of crime rate have been replaced by the median value. That is, if we designate the median as a threshold, we end up placing all the imputed (previously missing) values into the high crime category.
+
+In concern with the uncertainty of the missing values, we should refine the way we impute these crime rate values. It would be better to still use the median for the replacement value as a base, yet increase, and decrease the two halves of the data points in question by an insignificant amount. So instead of just putting them into the dataset with the same value, which would result all of them to fall into one crime category, the imputation is made in a way that the values get scattered around the median.
+
+```{r}
+# revisiting summaries of crime rate
+
+## original
+df.housing |>
+  select(crime_rate) |>
+  summary()
+
+## after median imputation
+df.housing.imputed |>
+  select(crime_rate) |>
+  summary()
+```
+
+```{r}
+# refine imputation
+
+## previous values of imputation (list of median)
+val.imputation.values <- df.housing.imputed$crime_rate[df.housing.imputed$crime_rate_replaced == TRUE]
+
+## generate deviates
+val.imputation.deviates <- c(
+  runif(
+    val.imputation.values |> length() |> divide_by(2) |> add(1),
+    -5e-3,
+    0
+  ),
+  runif(
+    val.imputation.values |> length() |> divide_by(2) |> add(1),
+    0,
+    5e-3
+  )
+) |>
+  sample(val.imputation.values |> length())
+
+## new version of the dataset
+df.housing.imputed.refined <- df.housing.imputed
+
+## update affected data points by deviates
+df.housing.imputed.refined$crime_rate[df.housing.imputed.refined$crime_rate_replaced == TRUE] <- val.imputation.values |>
+  add(val.imputation.deviates)
+
+## visualization of imputations and the original median
+df.housing.imputed.refined |>
+  filter(crime_rate_replaced == TRUE) |>
+  ggplot() +
+  geom_point(
+    aes(crime_rate, median_home_value, col = (crime_rate < val.df.housing.crime_rate.median)),
+    size = 4,
+    alpha = 0.75
+  ) +
+  geom_vline(xintercept = val.df.housing.crime_rate.median) +
+  scale_color_manual(values = c("purple", "coral")) +
+  labs(
+    x = "Crime Rate",
+    y = "Median Home Value",
+    col = "CR < median"
+  )
+
+## proportion of imputations on each side of the original median
+df.housing.imputed.refined |>
+  filter(crime_rate_replaced == TRUE) |>
+  mutate(
+    imputation_side = crime_rate >= val.df.housing.crime_rate.median
+  ) |>
+  count(imputation_side) |>
+  pull(n) |>
+  prop.table()
+```
+
+```{r}
+# after refined imputation
+
+## summary
+df.housing.imputed.refined |>
+  select(crime_rate) |>
+  summary()
+
+## visualization
+df.housing.imputed.refined |>
+  ggplot() +
+  geom_point(
+    aes(crime_rate, median_home_value, col = crime_rate_replaced),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "red")) +
+  labs(
+    x = "Crime Rate",
+    y = "Median Home Value",
+    col = "Refined Imputation"
+  )
+```
+
+
+## Continue the Test
+
+```{r}
+# separate sample into two, based on two crime categories
+
+## threshold
+val.crime_category_threshold <- val.df.housing.crime_rate.median
+
+## add new variable
+df.housing.imputed.refined <- df.housing.imputed.refined |>
+  mutate(
+    crime_category = ifelse(crime_rate >= val.crime_category_threshold,
+      "High",
+      "Low"
+    )
+  ) |>
+  mutate(
+    crime_category = fct(crime_category)
+  ) |>
+  relocate(
+    crime_category,
+    .after = crime_rate
+  )
+```
+
+Since the observations had been labeled using the median crime rate value as a threshold, the two categories are equally proportioned.
+
+```{r}
+# proportions of the two categories
+df.housing.imputed.refined |>
+  select(crime_category) |>
+  table() |>
+  prop.table() |>
+  round(3)
+```
+
+As for a visual, the observations and the variables the hypothesis test is related to can be plotted as follows:
+
+```{r, warning=FALSE}
+# hypothesis related scatter plot
+df.housing.imputed.refined |>
+  ggplot() +
+  geom_point(
+    aes(crime_rate, median_home_value, col = crime_category),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "coral")) +
+  labs(
+    title = "Median Home Value over Crime Rate",
+    subtitle = "points are distinguished based on their Crime Category",
+    x = "Crime Cate",
+    y = "Median Home Value",
+    col = "Crime Category"
+  )
+```
+
+To decide on what type of test to carry out, the following shall be considered:
+
+  - the available dataset is only a sample which had been labeled by crime categories based on low / high crime rates
+  - the parameters of each population ($\mu$, $\sigma^2$) are unknown
+    - however, normal distribution and equal variance is assumed
+    - the hypotheses refer to the difference of the population parameters
+    - however, each sub-sample has enough elements ($n>30$) to estimate the population parameters
+
+The project guide advises to use _t-test_, which would use the sample statistics to estimate population parameters and would utilize a _t-distribution_ with 504 _degrees of freedom_. However, a _t-distribution_ with such a high degrees of freedom is very close to a normal distribution as depicted in the following diagram.
+
+```{r}
+# degrees of freedom
+
+val.degrees_of_freedom <- df.housing.imputed.refined |>
+  nrow() |>
+  subtract(2)
+
+val.degrees_of_freedom |>
+  print()
+```
+
+```{r}
+# n vs. t distribution
+data.frame(x = c(-3, 3)) |>
+  ggplot(aes(x)) +
+  stat_function(fun = dnorm, lwd = 3, col = "coral") +
+  stat_function(fun = dt, args = list(df = val.degrees_of_freedom), lwd = .75) +
+  geom_label(label = "~N(0, 1)", x = -1, y = .25, fill = "white", col = "coral", size = 5) +
+  geom_label(label = "df = 504", x = 1, y = .25, size = 5)
+```
+
+In that light, I decided to proceed as follows:
+
+ 1. calculate and evaluate p-value in a _z-test_, using sample statistics as estimators and normal distribution
+ 2. calculate and evaluate p-value in a _t-test_, using sample statistics as estimators and t-distribution (df = 504)
+ 3. compare the results of the two approaches
+
+## Z-test
+
+The _z-test_ formula for a one-sample and a two-sample test, respectively:
+
+$$
+\begin{split}
+Z = \frac{val - EV}{SE} \\ \\
+Z = \frac{diff - EV}{SE_{diff}} = \frac{diff - EV}{\sqrt(SE_1^2 + SE_2^2)}
+\end{split}
+$$
+
+The standard error, using the sample standard deviation:
+
+$$
+SE = \frac{s}{\sqrt{n}}
+$$
+
+Using the notations of the sample means and standard deviations, the following formula is established:
+
+$$
+Z = \frac{|\overline{x}_L - \overline{x}_H| - 0}{\sqrt{\frac{s_L^2}{n_L} + \frac{s_H^2}{n_H}}}
+$$
+Using `R` to calculate the _z-score_:
+
+```{r}
+# rownum of crime categories, mean and standard deviation of their target variable
+
+mtx.samples_n_mean_sd <- c(
+  df.housing.imputed.refined |>
+    filter(crime_category == "Low") |>
+    nrow(),
+  df.housing.imputed.refined |>
+    filter(crime_category == "Low") |>
+    pull(median_home_value) |>
+    mean(),
+  df.housing.imputed.refined |>
+    filter(crime_category == "Low") |>
+    pull(median_home_value) |>
+    sd(),
+  df.housing.imputed.refined |>
+    filter(crime_category == "High") |>
+    nrow(),
+  df.housing.imputed.refined |>
+    filter(crime_category == "High") |>
+    pull(median_home_value) |>
+    mean(),
+  df.housing.imputed.refined |>
+    filter(crime_category == "High") |>
+    pull(median_home_value) |>
+    sd()
+) |>
+  matrix(nrow = 2, ncol = 3, byrow = TRUE)
+
+colnames(mtx.samples_n_mean_sd) <- c("n", "Mean", "Standard deviation")
+rownames(mtx.samples_n_mean_sd) <- c("Low crime category", "High crime category")
+
+mtx.samples_n_mean_sd |>
+  print()
+
+# z-score calculation
+z.score <- (
+  (mtx.samples_n_mean_sd[1, "Standard deviation"]^2 / mtx.samples_n_mean_sd[1, "n"]) |>
+    add((mtx.samples_n_mean_sd[2, "Standard deviation"]^2 / mtx.samples_n_mean_sd[2, "n"]))
+) |>
+  sqrt() |>
+  raise_to_power(-1) |>
+  multiply_by(
+    abs(mtx.samples_n_mean_sd[1, "Mean"] |>
+      subtract(mtx.samples_n_mean_sd[2, "Mean"])) |>
+      subtract(0)
+  )
+```
+
+The _z-score_ is the following:
+
+```{r}
+# z-score
+z.score |>
+  print()
+```
+
+There are two ways to proceed, in order to evaluate how this score relates to our hypotheses.
+
+- calculate the _p-value_ associated with the _z-score_ and compare it with the _significance level_ ($\alpha$)
+- calculate the _z-score_ associated with the _significance level_ ($\alpha$) and compare it with the previously acquired _z-score_
+
+The _p-value_ is calculated by summarizing the area of the normal distribution curve under the following intervals:
+
+- $Z \le -1.480672$
+- $Z \ge 1.480672$
+
+```{r}
+data.frame(z = c(-4, 4)) |>
+  ggplot(aes(z)) +
+  # normal curve
+  stat_function(fun = dnorm, lwd = 1) +
+  stat_function(fun = dnorm, geom = "area", fill = "lightgrey", lwd = 1) +
+  # rejection area fractions
+  stat_function(
+    fun = dnorm,
+    xlim = c(-4, qnorm(.025)),
+    geom = "area",
+    fill = "red2"
+  ) +
+  stat_function(
+    fun = dnorm,
+    xlim = c(qnorm(.975), 4),
+    geom = "area",
+    fill = "red2"
+  ) +
+  ## corresponding z-scores
+  geom_vline(xintercept = qnorm(.025), col = "red2") +
+  geom_label(x = qnorm(.025), y = .15, label = qnorm(.025) |> round(4), col = "red2") +
+  geom_vline(xintercept = qnorm(.975), col = "red2") +
+  geom_label(x = qnorm(.975), y = .15, label = qnorm(.975) |> round(4), col = "red2") +
+  # p-value fractions
+  stat_function(
+    fun = dnorm,
+    xlim = c(-4, -z.score),
+    geom = "area",
+    fill = "purple2",
+    alpha = 0.5
+  ) +
+  stat_function(
+    fun = dnorm,
+    xlim = c(z.score, 4),
+    geom = "area",
+    fill = "purple2",
+    alpha = 0.5
+  ) +
+  ## corresponding z-scores
+  geom_vline(xintercept = -z.score, col = "purple2") +
+  geom_label(x = -z.score, y = .35, label = -z.score |> round(4), col = "purple2") +
+  geom_vline(xintercept = z.score, col = "purple2") +
+  geom_label(x = z.score, y = .35, label = z.score |> round(4), col = "purple2")
+```
+
+According to the calculations and the visual, the absolute _z-score_ associated with the half of the _p-value_ on both tails is less than the _z-score_ associated with the _significance level_, that is stands outside the rejection area, that is the _p-value_ exceeds the _significance level_.
+
+  - $|z_{p/2}| < |z_{\alpha/2}|$, that is $1.481 < 1.96$
+  - $p > \alpha$, that is $0.139 > 0.05$
+
+In that light, we can conclude that there is no statistically significant evidence to reject the null hypothesis, that is, the observed difference between _median home prices_ in the two groups based on crime rate is due to chance and not due to the statistical significance of the observation.
+
+Simply put, we **do not reject** $H_0$, the null hypothesis.
+
+## T-test
+
+The t-score can be calculated the same way as in the previous z-score equations, however the p-value is obtained from a t-distribution with a previously determined degrees of freedom of $n_L + n_H - 2$.
+
+```{r}
+# t-score
+t.score <- z.score
+```
+
+```{r}
+# degrees of freedom
+val.degrees_of_freedom |>
+  print()
+```
+
+The _p-value_ is calculated by summing the areas of the t-distribution curve under the following intervals:
+
+- $T \le -1.480672$
+- $T \ge 1.480672$
+
+As mentioned before, a _t-distribution_ with such a high _degrees of freedom_ closely approximates a _normal distribution_.
+
+```{r}
+data.frame(t = c(-4, 4)) |>
+  ggplot(aes(t)) +
+  # t curve
+  stat_function(fun = dt, args = list(df = val.degrees_of_freedom), lwd = 1) +
+  stat_function(fun = dt, args = list(df = val.degrees_of_freedom), geom = "area", fill = "lightgrey", lwd = 1) +
+  # rejection area fractions
+  stat_function(
+    fun = dt,
+    args = list(df = val.degrees_of_freedom),
+    xlim = c(-4, qt(.025, df = val.degrees_of_freedom)),
+    geom = "area",
+    fill = "red2"
+  ) +
+  stat_function(
+    fun = dt,
+    args = list(df = val.degrees_of_freedom),
+    xlim = c(qt(.975, df = val.degrees_of_freedom), 4),
+    geom = "area",
+    fill = "red2"
+  ) +
+  ## corresponding t-scores
+  geom_vline(xintercept = qt(.025, df = val.degrees_of_freedom), col = "red2") +
+  geom_label(x = qt(.025, df = val.degrees_of_freedom), y = .15, label = qt(.025, df = val.degrees_of_freedom) |> round(4), col = "red2") +
+  geom_vline(xintercept = qt(.975, df = val.degrees_of_freedom), col = "red2") +
+  geom_label(x = qt(.975, df = val.degrees_of_freedom), y = .15, label = qt(.975, df = val.degrees_of_freedom) |> round(4), col = "red2") +
+  # p-value fractions
+  stat_function(
+    fun = dt,
+    args = list(df = val.degrees_of_freedom),
+    xlim = c(-4, -t.score),
+    geom = "area",
+    fill = "purple2",
+    alpha = 0.5
+  ) +
+  stat_function(
+    fun = dt,
+    args = list(df = val.degrees_of_freedom),
+    xlim = c(t.score, 4),
+    geom = "area",
+    fill = "purple2",
+    alpha = 0.5
+  ) +
+  ## corresponding t-scores
+  geom_vline(xintercept = -t.score, col = "purple2") +
+  geom_label(x = -t.score, y = .35, label = -t.score |> round(4), col = "purple2") +
+  geom_vline(xintercept = t.score, col = "purple2") +
+  geom_label(x = t.score, y = .35, label = t.score |> round(4), col = "purple2")
+```
+
+The slight differences can be observed in the _t-score_ associated with the rejection area. It is a bit more far away from zero than in the case of the _z-score_, because now the tails are slightly fatter.
+
+  - $|t_{p/2}| < |t_{\alpha/2}|$, that is $1.4807 < 1.9647$
+  - $p > \alpha$, that is $0.1391 > 0.05$
+
+## Verification
+
+Verifying the above calculations by running `stats::t.test`.
+
+```{r}
+# stats::t.test
+t.test(
+  formula = median_home_value ~ crime_category,
+  data = df.housing.imputed.refined,
+  alternative = "two.sided",
+  mu = 0,
+  conf.level = 0.95,
+  var.equal = TRUE
+)
+```

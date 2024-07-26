@@ -1,0 +1,616 @@
+
+# Exploring and Analysing the Dataset
+
+The project guide advises to explore and analyze the dataset to understand the overall structure and characteristics of the data by:
+
+  - computing _descriptive statistics_
+  - performing _correlation analysis_
+  - identifying and handling _missing values_
+
+```{r}
+# package imports related to all tasks
+library(tidyverse)
+library(magrittr)
+library(ggcorrplot)
+```
+
+```{r}
+# seed
+set.seed(1234)
+```
+
+
+The data is given as a `CSV` file called `housing_data.csv`. The following code loads the data into the object `df.housing` as a dataframe, keeping the original column names intact.
+
+```{r}
+# load dataset
+df.housing <- read.csv("../data/housing_data.csv", check.names = FALSE)
+```
+
+The imported dataset confirms the previously introduced variables.
+
+```{r}
+# original colnames
+
+val.df.housing.original_colnames <- df.housing |>
+  colnames()
+
+val.df.housing.original_colnames |>
+  print()
+```
+
+The dataset has the following number of rows, that is observations:
+
+```{r}
+# number of rows
+df.housing |>
+  nrow()
+```
+
+The dataset has the following structure:
+
+```{r}
+# structure
+df.housing |>
+  str()
+```
+
+Before proceeding any further, the variable names get transformed into a form better suitable for the rest of the analysis.
+
+```{r}
+# cleaning variable names
+
+df.housing <- df.housing |>
+  janitor::clean_names()
+
+df.housing |>
+  colnames()
+```
+
+Also, since R does not have a built-in _mode_ function, the project guide advises implementing one.
+
+```{r}
+# mode function
+## returns mode(s) if there are no more than 3 modes in the given variable,
+## otherwise returns NA
+
+fn.mode <- function(x) {
+  t <- table(x)
+  mode <- names(t)[which(t == max(t))]
+
+  ## max 3 modes in a variable
+  if (length(mode) > 3) {
+    mode <- NA
+  }
+
+  return(as.numeric(mode))
+}
+```
+
+
+## Overview of Variables
+
+There are missing values in the variables according to the following table:
+
+```{r}
+# column-wise presence of NA
+
+## function
+fn.hasNA <- function(df) {
+  (
+    any(is.na(df))
+  )
+}
+
+## table
+
+out.presenceNA <- df.housing |>
+  sapply(fn.hasNA)
+
+names(out.presenceNA) <- paste(names(out.presenceNA), "has NA", sep = " ")
+
+out.presenceNA |>
+  print()
+```
+
+```{r}
+# summary of variables
+df.housing |>
+  summary()
+```
+
+The mode of the variables are, respectively:
+
+```{r}
+# mode of variables
+df.housing |>
+  sapply(fn.mode)
+```
+
+### Crime Rate
+  
+Being a numerical type, this variable contains decimal values from approximately $0$ to no more than $13$. The mean is slightly larger than the median, that is, the frequency distribution of the variable is slightly stretched to the right, exhibiting right skewness. There are $25$ observations with missing value for this variable. The mode is $0.1$, however being a continuous variable, a binned mode shall be identified by the help of visualization.
+
+The distribution of the variable, visualized in a histogram, using a binwidth of $0.5$, is the following:
+
+```{r, warning=FALSE}
+# histogram
+df.housing |>
+  ggplot() +
+  geom_histogram(
+    aes(crime_rate),
+    binwidth = 0.5,
+    boundary = 0.5,
+    closed = "left",
+    col = "purple",
+    fill = "purple",
+    alpha = 0.75
+  ) +
+  scale_x_continuous(breaks = seq(0, 13, by = 1)) +
+  labs(
+    title = "Frequency distribution of Crime Rate",
+    subtitle = "bin intervals are left side closed",
+    x = "Crime Rate",
+    y = "Frequency"
+  )
+```
+
+```{r, warning=FALSE}
+# boxplot
+df.housing |>
+  ggplot() +
+  geom_boxplot(
+    aes(crime_rate),
+    fill = "cornflowerblue"
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 13, by = 1)
+  ) +
+  labs(
+    title = "Crime Rate intervals of equal parts of the dataset",
+    x = "Crime Rate"
+  ) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+```
+
+To sum up:
+
+  - presence of missing values (**NA**s)
+  - numerical type
+  - distributed within **[0.005305, 12.631829]**
+  - median (**3.031481**) < mean (**3.137415**)
+  - the exact mode is **0.1**, in terms of bins the mode is **[0, 0.5)**
+
+
+### Average Rooms
+
+Being a numerical type, this variable contains decimal values from $4.112$ to approximately no more than $8$. The mean is almost exactly the same as the median, that is, no skewness is expected. There are $15$ observations with missing value for this variable. There is no mode, however being a continuous variable, a binned mode shall be identified by the help of visualization.
+
+The distribution of the variable, visualized in a histogram, using a binwidth of $0.25$, is the following:
+
+```{r, warning=FALSE}
+# histogram
+df.housing |>
+  ggplot() +
+  geom_histogram(
+    aes(average_rooms),
+    binwidth = 0.25,
+    boundary = 0.25,
+    closed = "left",
+    col = "purple",
+    fill = "purple",
+    alpha = 0.75
+  ) +
+  scale_x_continuous(breaks = seq(0, 8, by = 0.25)) +
+  labs(
+    title = "Frequency distribution of Average Rooms",
+    subtitle = "bin intervals are left side closed",
+    x = "Average Rooms",
+    y = "Frequency"
+  )
+```
+
+To sum up:
+
+  - presence of missing values (**NA**s)
+  - numerical type
+  - distributed within **[4.112, 7.801]**
+  - median (**6.033**) ≈ mean (**6.026**)
+  - there is no exact mode, in terms of bins the mode is **[6, 6.25)**
+
+
+### Public Transport Access
+
+Being an integer type, this variable contains whole numbers from $1$ to $10$. The mean is larger than the median, that is, the frequency distribution of the variable is stretched to the right, exhibiting right skewness. There are no missing values related to this variable, the mode is $2$.
+
+The distribution of the variable, visualized in a histogram, using a binwidth of $1$, is the following:
+
+```{r}
+# histogram
+df.housing |>
+  ggplot() +
+  geom_histogram(
+    aes(public_transport_access),
+    binwidth = 1,
+    boundary = 1,
+    closed = "left",
+    col = "purple",
+    fill = "purple",
+    alpha = 0.75
+  ) +
+  scale_x_continuous(
+    limits = c(1, 11),
+    breaks = seq(0, 11, by = 1)
+  ) +
+  labs(
+    title = "Frequency distribution of Public Transport Access",
+    subtitle = "bin intervals are left side closed",
+    x = "Public Transport Access",
+    y = "Frequency"
+  )
+```
+
+To sum up:
+
+  - no missing values (no **NA**s)
+  - integer type
+  - distributed within **[1, 10]**
+  - median (**5**) < mean (**5.421**)
+  - mode is **2**
+  
+  
+### Number of Schools
+
+Being an integer type, this variable contains whole numbers from $0$ to $10$. The mean is almost exactly the same as the median, that is, no skewness is expected. There are no missing values related to this variable. The mode is $5$.
+
+The distribution of the variable, visualized in a histogram, using a binwidth of $1$, is the following:
+
+```{r}
+# histogram
+df.housing |>
+  ggplot() +
+  geom_histogram(
+    aes(number_of_schools),
+    binwidth = 1,
+    boundary = 1,
+    closed = "left",
+    col = "purple",
+    fill = "purple",
+    alpha = 0.75
+  ) +
+  scale_x_continuous(
+    limits = c(0, 11),
+    breaks = seq(0, 11, by = 1)
+  ) +
+  labs(
+    title = "Frequency distribution of Number of Schools",
+    subtitle = "bin intervals are left side closed",
+    x = "Number of Schools",
+    y = "Frequency"
+  )
+```
+
+To sum up:
+
+  - no missing values (no **NA**s)
+  - integer type
+  - distributed within **[0, 10]**
+  - median (**5**) ≈ mean (**4.992**)
+  - mode is **5**
+
+
+### Median Home Value
+
+Being a numerical type, this variable contains decimal values from $31.55$ to $62.56$. The mean is slightly larger than the median, that is, the frequency distribution of the variable is slightly stretched to the right, exhibiting right skewness. There are no missing values related to this variable, nor does an exact mode exist, however being a continuous variable, a binned mode shall be identified by the help of visualization.
+
+The distribution of the variable, visualized in a histogram, using a binwidth of $2$, is the following:
+
+```{r}
+# histogram
+df.housing |>
+  ggplot() +
+  geom_histogram(
+    aes(median_home_value),
+    binwidth = 2,
+    boundary = 2,
+    closed = "left",
+    col = "purple",
+    fill = "purple",
+    alpha = 0.75
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 65, by = 2)
+  ) +
+  labs(
+    title = "Frequency distribution of Median Home Value",
+    subtitle = "bin intervals are left side closed",
+    x = "Median Home Value",
+    y = "Frequency"
+  )
+```
+
+To sum up:
+
+  - no missing values (no **NA**s)
+  - numerical type
+  - distributed within **[31.55, 62.56]**
+  - median (**46.91**) < mean (**47.10**)
+  - there is no exact mode, in terms of bins the mode is **[46, 48)**
+
+
+## Revisiting and Addressing Concerns
+
+The following details, which, in fact, were not available at the time of the start of the project (the project hid this information until submission / it can be viewed as delayed information about the dataset) might shed light to some of the uncertainties and help resolving the [concerns](#first-inspection-and-uncertainties) that had been stated previously.
+
+A _housing area_ represents a **neighborhood** and _public transport access_ indicates the **number of buses** passing through the neighborhood within **an hour**.
+
+Looking at the distribution of the variables of the dataset, we can settle on the scale, on which the _median home value_ is measured, which is **1000 USD**.
+
+The _crime rate_ scale seems to remain vaguely specified according to the following partially resolved concerns.
+  
+A crime rate is a standardized measure to compare the number of crimes in areas that differ in their population. It is usually expressed with the number of crimes projected to a population of 1.000 or 100.000. For example, two areas with crimes occurring 100, and 500 times a year in a population of 10.000, and 50.000, respectively, result in the same crime rate of 10 expressed for 1.000 people
+
+The project does not specify the number of people the crime rate is expressed for, however, looking at the histogram and boxplot of crime rate might help. The boxplot indicates that more than 75% of the dataset is above 1. That is, in 75% of the observed housing areas exhibit a crime for each of the person living in the area. Unless the data aims to cover areas with high crime rate (which is not the case), the crime rate must indicate a value expressed for more than one person, such as 1.000 or 100.000.
+
+The project also does not specify the type of crime measured by the crime rate variable. It could mean 0 to 13 crimes per a 1.000 or per a 100.000 depending on the seriousness of the crimes involved in this measurement.
+
+
+## Correlation Analysis
+
+The project advises looking at whether there is a correlation between any of the variables.
+
+A correlation matrix of the variables is computed and visualized as follows:
+
+```{r}
+# correlation matrix
+
+## matrix
+cor(df.housing, use = "complete.obs")
+
+## visualization
+df.housing |>
+  ## use original column names
+  rename_with(~val.df.housing.original_colnames) |>
+  cor(use = "complete.obs") |>
+  ggcorrplot(
+    colors = c("black", "white", "purple"),
+    method = "circle",
+    type = "upper"
+  ) +
+  labs(
+    title = "Correlation of Housing Market data variables"
+  )
+
+## coefficient of correlation
+val.cor.avg_rooms_median_home_value <- cor(df.housing$average_rooms, df.housing$median_home_value, use = "complete.obs")
+```
+
+Other than a few very weak positive correlations between the variables, only one stands out significantly, which is the correlation between _median home value_ and _average rooms_ with a correlation coefficient of $0.8884$.
+
+The following scatterplot also displays how close the data points of these two variables are positively correlated.
+
+```{r, warning=FALSE}
+# scatterplot of the correlated variable pair
+df.housing |>
+  ggplot() +
+  geom_point(
+    aes(average_rooms, median_home_value),
+    shape = 21,
+    size = 2.5,
+    col = "cornflowerblue"
+  ) +
+  labs(
+    title = "Scatterplot of Average Rooms and Median Home Value",
+    x = "Average Rooms",
+    y = "Median Home Value"
+  )
+```
+
+Last but not least, the coefficient of determination is:
+
+```{r}
+# coefficient of determination
+val.cor.avg_rooms_median_home_value |>
+  raise_to_power(2) |>
+  print()
+```
+
+That is, around $79\%$ of the variability of _median home value_ is accounted for the _average rooms_.
+
+
+## Handling Missing Values
+
+Missing values introduce strong uncertainty into the picture. The way we handle missing values might depend on the number of such data points or the distribution of the affected variables.
+
+One way to deal with them is to leave them out of subsequent analyses. In that case, however, one completely ignores these data points which might be useful otherwise. On the other hand, by replacing missing values, we need to specify the replacement values and be careful what fabricated values we introduce to the picture of our subsequent analyses.
+
+As the previous sections indicate, there are two variables with missing values: _crime rate_ and _average rooms_. The affected variables have missing values according to the following scatterplots and proportion visualizations.
+
+```{r}
+# displaying median home values for which crime rate is missing
+df.housing |>
+  mutate(
+    crime_rate = ifelse(is.na(crime_rate), -1, crime_rate)
+  ) |>
+  ggplot() +
+  geom_point(
+    aes(crime_rate, median_home_value, col = crime_rate == -1),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "red")) +
+  labs(
+    x = "Crime Rate",
+    y = "Median Home Value",
+    col = "X is missing"
+  )
+
+# displaying median home values for which average rooms is missing
+df.housing |>
+  mutate(
+    average_rooms = ifelse(is.na(average_rooms), -1, average_rooms)
+  ) |>
+  ggplot() +
+  geom_point(
+    aes(average_rooms, median_home_value, col = average_rooms == -1),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "red")) +
+  labs(
+    x = "Average Rooms",
+    y = "Median Home Value",
+    col = "X is missing"
+  )
+```
+
+```{r}
+# missing value proportions
+
+## crime rate
+df.housing |>
+  group_by(missing = is.na(crime_rate)) |>
+  count() |>
+  ungroup() |>
+  ggplot() +
+  geom_bar(
+    aes("x", n, fill = factor(missing)),
+    stat = "identity",
+    position = "fill"
+  ) +
+  scale_fill_manual(values = c("cornflowerblue", "coral")) +
+  labs(
+    x = "Crime Rate",
+    y = "Fraction",
+    fill = "Missing data"
+  ) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+
+## average rooms
+df.housing |>
+  group_by(missing = is.na(average_rooms)) |>
+  count() |>
+  ungroup() |>
+  ggplot() +
+  geom_bar(
+    aes("x", n, fill = factor(missing)),
+    stat = "identity",
+    position = "fill"
+  ) +
+  scale_fill_manual(values = c("cornflowerblue", "coral")) +
+  labs(
+    x = "Average Rooms",
+    y = "Fraction",
+    fill = "Missing data"
+  ) +
+  theme(
+    axis.ticks.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+
+The number of missing data in each of the two variables appears to be very small. Without delving into the numerous ways missing data could be replaced and its details, the median _imputation_ will be used to do replacement in the above cases.
+
+```{r}
+# missing crime rate replacement with median
+df.housing |>
+  mutate(
+    crime_rate_replaced = is.na(crime_rate)
+  ) |>
+  mutate(
+    crime_rate = ifelse(crime_rate_replaced,
+      median(crime_rate, na.rm = TRUE),
+      crime_rate
+    )
+  ) |>
+  ggplot() +
+  geom_point(
+    aes(crime_rate, median_home_value, col = crime_rate_replaced),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "red")) +
+  labs(
+    x = "Crime Rate",
+    y = "Median Home Value",
+    col = "Imputation"
+  )
+```
+
+```{r}
+# missing average rooms replacement with median
+df.housing |>
+  mutate(
+    average_rooms_replaced = is.na(average_rooms)
+  ) |>
+  mutate(
+    average_rooms = ifelse(average_rooms_replaced,
+      median(average_rooms, na.rm = TRUE),
+      average_rooms
+    )
+  ) |>
+  ggplot() +
+  geom_point(
+    aes(average_rooms, median_home_value, col = average_rooms_replaced),
+    shape = 21,
+    size = 2.5
+  ) +
+  scale_color_manual(values = c("cornflowerblue", "red")) +
+  labs(
+    x = "Average Rooms",
+    y = "Median Home Value",
+    col = "Imputation"
+  )
+```
+
+It appears, that the imputation does not visibly affect the crime rate variable, and as for the average rooms, only one or two strange points are introduced.
+
+```{r}
+# summary before replacement
+df.housing |>
+  select(crime_rate, average_rooms) |>
+  summary()
+
+# replacement
+
+val.df.housing.crime_rate.median <- median(df.housing$crime_rate, na.rm = TRUE)
+val.df.housing.average_rooms.median <- median(df.housing$average_rooms, na.rm = TRUE)
+
+df.housing.imputed <- df.housing |>
+  mutate(
+    crime_rate_replaced = is.na(crime_rate),
+    average_rooms_replaced = is.na(average_rooms)
+  ) |>
+  mutate(
+    crime_rate = ifelse(crime_rate_replaced,
+      val.df.housing.crime_rate.median,
+      crime_rate
+    ),
+    average_rooms = ifelse(average_rooms_replaced,
+      val.df.housing.average_rooms.median,
+      average_rooms
+    )
+  )
+
+# summary after replacement
+df.housing.imputed |>
+  select(crime_rate, average_rooms) |>
+  summary()
+```
+
+Also, the correlation of _average rooms_ and _median home value_ remains almost the same.
+
+```{r}
+# correlation of average rooms and median home value
+
+val.cor.avg_rooms_median_home_value |>
+  print()
+
+cor(df.housing.imputed$average_rooms, df.housing.imputed$median_home_value, use = "complete.obs")
+```

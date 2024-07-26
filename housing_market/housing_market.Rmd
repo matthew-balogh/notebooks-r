@@ -1,0 +1,101 @@
+---
+title: "Housing Market Data Analysis in R"
+subtitle: "A 365 Data Science Course Project | Introduction to R Programming"
+author: "Matthew Balogh"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r, context="setup", include=FALSE}
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{r, context="setup", include=FALSE}
+library(ggplot2)
+
+theme_set(
+  theme_bw()
+)
+```
+
+# About the Document
+
+This document includes data analysis tasks related to the course project of [Introduction to R Programming](https://learn.365datascience.com/courses/preview/introduction-to-r-programming) of _365 Data Science_ platform.
+
+# About the Project
+
+According to the project overview, the goal is to get an understanding on how the characteristics of housing market influence other important characteristics such as the home value. In other words, using the available data, stakeholders want to infer and make predictions about the housing market in the observed environment.
+
+To do so, a dataset with the following variables is provided:
+
+  - **Crime.Rate:** Local crime rate per capita
+  - **Average.Rooms:** Average number of rooms in homes
+  - **Public.Transport.Access:** Proximity to public transport
+  - **Number.of.Schools:** Number of local schools
+  - **Median.Home.Value:** Median value of homes
+  
+# Dataset from a Bird's-eye View
+
+As the above list of variables shows, there are statistical measures, such as _rate_, _average_, and _median_ (namely `Crime.Rate`, `Average.Rooms`, and `Median.Home.Value`), associated with each observation in the dataset. This suggests that each observation is related to a set of elements, housing units in this case, from which these statistical measures are calculated.
+
+However, the variables that appear not to be statistical measures, such as `Public.Transport.Access` and `Number.of.Schools`, are constant values that apply for all the elements in the set, that is for all the housing units, with which each observation is associated.
+
+It appears that the observations represent some kind of areas, for example, neighborhoods, or blocks, which is not stated explicitly. For the rest of the analysis, keeping this aspect of the dataset abstract and not clearly specified, the term _housing area_ will be used.
+
+In that light, we have a pre-collected data on housing areas, where each **housing area** has characteristics of:
+
+  - **crime rate** per capita of the area
+  - **average rooms** of the housing units located in the area
+  - **median home value** of the housing units located in the area
+  - **public transport access** of the area
+  - **number of schools** of the area
+
+# First Inspection and Uncertainties
+
+Due to the lack of a detailed description of the provided dataset, there are a few uncertainties that one might be concerned about. These uncertainties might turn out to be unimportant regarding to the goal of the analysis yet it is better to make notes of them.
+
+Let's see if the first 10 rows of the dataset provide additional information or raise more questions...
+
+```{r, echo=FALSE}
+library(tidyverse)
+
+read.csv("./data/housing_data.csv", check.names = FALSE) |>
+  head(n = 10)
+```
+
+As already noted, the type of housing areas and housing units, with which the observations are associated is unclear. We also do not know the currency or the scale in which the home values (`Median Home Value`) are expressed. The unit, in which the `Public Transport Access` variable is expressed is also unknown. The `Number of Schools` seems to be an obvious measure, however, the type of schools these number refer to is not known. `Crime Rate` is also a vague indicator - even though the project describes it as a per capita measurement, one might be suspicious looking at those high rates in the above sample of the dataset.
+
+As for the `Public Transport Access` variable, we could also think about it as a central measure of the housing units in the area. A constant value might indicate that the area encloses housing units that do not differ in physical location, while a central measure might indicate the aggregate of a housing area with related yet physically spread-out housing units.
+
+Until a more detailed investigation suggests otherwise, these concerns are considered as resolved and handled as follows:
+
+  - housing areas and enclosed housing units remain **unspecified**
+  - home value is assumed to be expressed in **USD** yet:
+    - the scale on which it is presented, without seeing the entire data available, remains **unspecified**
+  - public transport access is probably expressed in minutes, however:
+    - it is not guaranteed without seeing the entire data available, remains **unspecified**
+    - it also does not indicate the type of transport, remains **unspecified**
+    - nor does it indicate the routes of the transport, remains **unspecified**
+  - number of schools is an obvious **discrete measure** yet:
+    - the type of schools involved remains **unspecified**
+    - the vacancy of schools involved remains **unspecified**
+  - average rooms is an obvious aggregated continuous measure
+  - crime rate is per capita, however, without seeing the entire data available, remains **unspecified**
+
+
+```{r, child="sections/section_eda.Rmd"}
+```
+
+```{r, child="sections/section_hypothesis_test.Rmd"}
+```
+
+```{r, child="sections/section_linear_regression.Rmd"}
+```
