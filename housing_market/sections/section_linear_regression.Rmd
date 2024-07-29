@@ -2,7 +2,7 @@
 
 Another task of the project is to perform a regression, to predict _median home value_ based on a suitable predictor.
 
-It has been shown that the target variable exhibits correlation with the _average rooms_ one. Since they seem to align in a linear fashion, a regression of linear would suit the needs.
+It has been shown that the target variable exhibits a correlation with the _average rooms_ one. Since they seem to align in a linear fashion, a regression of linear would suit the needs.
 
 ```{r}
 # linear regression
@@ -50,8 +50,8 @@ According to the linear regression model, the regression line intercepts the ord
   
 $$
 \begin{split}
-\hat{y}(x) = \beta_0 + \beta_1\times{x} \\
-\hat{y}(x)  = 3.7854 + 7.1886\times{x}
+\hat{y}(x) = \beta_0 + \beta_1 x \\
+\hat{y}(x)  = 3.7854 + 7.1886 x
 \end{split}
 $$
 

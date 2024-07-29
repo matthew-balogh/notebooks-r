@@ -1,6 +1,6 @@
 # Hypothesis Test
 
-One of the tasks of the project is to perform a hypothesis test regarding to the impact of crime rates on the median home values.
+One of the tasks of the project is to perform a hypothesis test regarding the impact of crime rates on the median home values.
 
 The objective is to determine if there's a statistically significant difference in the median home values of neighborhoods with high crime rates compared to areas with low crime rates.
 
@@ -47,7 +47,7 @@ $$
 
 Before further proceeding in the hypothesis test, we must address the fact that missing data of crime rate have been replaced by the median value. That is, if we designate the median as a threshold, we end up placing all the imputed (previously missing) values into the high crime category.
 
-In concern with the uncertainty of the missing values, we should refine the way we impute these crime rate values. It would be better to still use the median for the replacement value as a base, yet increase, and decrease the two halves of the data points in question by an insignificant amount. So instead of just putting them into the dataset with the same value, which would result all of them to fall into one crime category, the imputation is made in a way that the values get scattered around the median.
+In concern with the uncertainty of the missing values, we should refine the way we impute these crime rate values. It would be better to still use the median for the replacement value as a base, yet increase, and decrease the two halves of the data points in question by an insignificant amount. So instead of just putting them into the dataset with the same value, which would result in all of them falling into one crime category, the imputation is made in a way that the values get scattered around the median.
 
 ```{r}
 # revisiting summaries of crime rate
@@ -203,13 +203,13 @@ df.housing.imputed.refined |>
 
 To decide on what type of test to carry out, the following shall be considered:
 
-  - the available dataset is only a sample which had been labeled by crime categories based on low / high crime rates
+  - the available dataset is only a sample that had been labeled by crime categories based on low / high crime rates
   - the parameters of each population ($\mu$, $\sigma^2$) are unknown
-    - however, normal distribution and equal variance is assumed
-    - the hypotheses refer to the difference of the population parameters
+    - however, normal distribution and equal variance are assumed
+    - the hypotheses refer to the difference in the population parameters
     - however, each sub-sample has enough elements ($n>30$) to estimate the population parameters
 
-The project guide advises to use _t-test_, which would use the sample statistics to estimate population parameters and would utilize a _t-distribution_ with 504 _degrees of freedom_. However, a _t-distribution_ with such a high degrees of freedom is very close to a normal distribution as depicted in the following diagram.
+The project guide advises using _t-test_, which would use the sample statistics to estimate population parameters and would utilize a _t-distribution_ with 504 _degrees of freedom_. However, a _t-distribution_ with such a high degree of freedom is very close to a normal distribution as depicted in the following diagram.
 
 ```{r}
 # degrees of freedom
@@ -375,7 +375,7 @@ data.frame(z = c(-4, 4)) |>
   geom_label(x = z.score, y = .35, label = z.score |> round(4), col = "purple2")
 ```
 
-According to the calculations and the visual, the absolute _z-score_ associated with the half of the _p-value_ on both tails is less than the _z-score_ associated with the _significance level_, that is stands outside the rejection area, that is the _p-value_ exceeds the _significance level_.
+According to the calculations and the visual, the absolute _z-score_ associated with half of the _p-value_ on both tails is less than the _z-score_ associated with the _significance level_, that is stands outside the rejection area, that is the _p-value_ exceeds the _significance level_.
 
   - $|z_{p/2}| < |z_{\alpha/2}|$, that is $1.481 < 1.96$
   - $p > \alpha$, that is $0.139 > 0.05$
@@ -386,7 +386,7 @@ Simply put, we **do not reject** $H_0$, the null hypothesis.
 
 ## T-test
 
-The t-score can be calculated the same way as in the previous z-score equations, however the p-value is obtained from a t-distribution with a previously determined degrees of freedom of $n_L + n_H - 2$.
+The t-score can be calculated the same way as in the previous z-score equations, however, the p-value is obtained from a t-distribution with a previously determined degree of freedom of $n_L + n_H - 2$.
 
 ```{r}
 # t-score
@@ -404,7 +404,7 @@ The _p-value_ is calculated by summing the areas of the t-distribution curve und
 - $T \le -1.480672$
 - $T \ge 1.480672$
 
-As mentioned before, a _t-distribution_ with such a high _degrees of freedom_ closely approximates a _normal distribution_.
+As mentioned before, a _t-distribution_ with such a high _degree of freedom_ closely approximates a _normal distribution_.
 
 ```{r}
 data.frame(t = c(-4, 4)) |>

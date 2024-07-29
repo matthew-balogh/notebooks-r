@@ -96,15 +96,12 @@ There are missing values in the variables according to the following table:
 # column-wise presence of NA
 
 ## function
-fn.hasNA <- function(df) {
-  (
-    any(is.na(df))
-  )
-}
+fn.hasNA <- function(df) (any(is.na(df)))
 
 ## table
 
 out.presenceNA <- df.housing |>
+  rename_with(~ val.df.housing.original_colnames) |> 
   sapply(fn.hasNA)
 
 names(out.presenceNA) <- paste(names(out.presenceNA), "has NA", sep = " ")
@@ -129,9 +126,9 @@ df.housing |>
 
 ### Crime Rate
   
-Being a numerical type, this variable contains decimal values from approximately $0$ to no more than $13$. The mean is slightly larger than the median, that is, the frequency distribution of the variable is slightly stretched to the right, exhibiting right skewness. There are $25$ observations with missing value for this variable. The mode is $0.1$, however being a continuous variable, a binned mode shall be identified by the help of visualization.
+Being a numerical type, this variable contains decimal values from approximately $0$ to no more than $13$. The mean is slightly larger than the median, that is, the frequency distribution of the variable is slightly stretched to the right, exhibiting right skewness. There are $25$ observations with missing values for this variable. The mode is $0.1$, however being a continuous variable, a binned mode shall be identified by the help of visualization.
 
-The distribution of the variable, visualized in a histogram, using a binwidth of $0.5$, is the following:
+The distribution of the variable, visualized in a histogram, using a bin width of $0.5$, is the following:
 
 ```{r, warning=FALSE}
 # histogram
@@ -187,9 +184,9 @@ To sum up:
 
 ### Average Rooms
 
-Being a numerical type, this variable contains decimal values from $4.112$ to approximately no more than $8$. The mean is almost exactly the same as the median, that is, no skewness is expected. There are $15$ observations with missing value for this variable. There is no mode, however being a continuous variable, a binned mode shall be identified by the help of visualization.
+Being a numerical type, this variable contains decimal values from $4.112$ to approximately no more than $8$. The mean is almost exactly the same as the median, that is, no skewness is expected. There are $15$ observations with missing values for this variable. There is no mode, however being a continuous variable, a binned mode shall be identified by the help of visualization.
 
-The distribution of the variable, visualized in a histogram, using a binwidth of $0.25$, is the following:
+The distribution of the variable, visualized in a histogram, using a bin width of $0.25$, is the following:
 
 ```{r, warning=FALSE}
 # histogram
@@ -226,7 +223,7 @@ To sum up:
 
 Being an integer type, this variable contains whole numbers from $1$ to $10$. The mean is larger than the median, that is, the frequency distribution of the variable is stretched to the right, exhibiting right skewness. There are no missing values related to this variable, the mode is $2$.
 
-The distribution of the variable, visualized in a histogram, using a binwidth of $1$, is the following:
+The distribution of the variable, visualized in a histogram, using a bin width of $1$, is the following:
 
 ```{r}
 # histogram
@@ -266,7 +263,7 @@ To sum up:
 
 Being an integer type, this variable contains whole numbers from $0$ to $10$. The mean is almost exactly the same as the median, that is, no skewness is expected. There are no missing values related to this variable. The mode is $5$.
 
-The distribution of the variable, visualized in a histogram, using a binwidth of $1$, is the following:
+The distribution of the variable, visualized in a histogram, using a bin width of $1$, is the following:
 
 ```{r}
 # histogram
@@ -306,7 +303,7 @@ To sum up:
 
 Being a numerical type, this variable contains decimal values from $31.55$ to $62.56$. The mean is slightly larger than the median, that is, the frequency distribution of the variable is slightly stretched to the right, exhibiting right skewness. There are no missing values related to this variable, nor does an exact mode exist, however being a continuous variable, a binned mode shall be identified by the help of visualization.
 
-The distribution of the variable, visualized in a histogram, using a binwidth of $2$, is the following:
+The distribution of the variable, visualized in a histogram, using a bin width of $2$, is the following:
 
 ```{r}
 # histogram
@@ -343,19 +340,19 @@ To sum up:
 
 ## Revisiting and Addressing Concerns
 
-The following details, which, in fact, were not available at the time of the start of the project (the project hid this information until submission / it can be viewed as delayed information about the dataset) might shed light to some of the uncertainties and help resolving the [concerns](#first-inspection-and-uncertainties) that had been stated previously.
+The following details, which, in fact, were not available at the time of the start of the project (the project hid this information until submission / it can be viewed as delayed information about the dataset) might shed light on some of the uncertainties and help resolving the [concerns](#first-inspection-and-uncertainties) that had been stated previously.
 
 A _housing area_ represents a **neighborhood** and _public transport access_ indicates the **number of buses** passing through the neighborhood within **an hour**.
 
-Looking at the distribution of the variables of the dataset, we can settle on the scale, on which the _median home value_ is measured, which is **1000 USD**.
+Looking at the distribution of the variables of the dataset, we can settle on the scale, on which the _median home value_ is measured, which is **1,000 USD**.
 
 The _crime rate_ scale seems to remain vaguely specified according to the following partially resolved concerns.
   
-A crime rate is a standardized measure to compare the number of crimes in areas that differ in their population. It is usually expressed with the number of crimes projected to a population of 1.000 or 100.000. For example, two areas with crimes occurring 100, and 500 times a year in a population of 10.000, and 50.000, respectively, result in the same crime rate of 10 expressed for 1.000 people
+A crime rate is a standardized measure to compare the number of crimes between areas that differ in their population. It is usually expressed with the number of crimes projected to a population of 1,000 or 100,000. For example, two areas with crimes occurring 100, and 500 times a year in a population of 10,000, and 50,000, respectively, result in the same crime rate of 10 expressed for 1,000 people
 
-The project does not specify the number of people the crime rate is expressed for, however, looking at the histogram and boxplot of crime rate might help. The boxplot indicates that more than 75% of the dataset is above 1. That is, in 75% of the observed housing areas exhibit a crime for each of the person living in the area. Unless the data aims to cover areas with high crime rate (which is not the case), the crime rate must indicate a value expressed for more than one person, such as 1.000 or 100.000.
+The project does not specify the number of people the crime rate is expressed for, however, looking at the [histogram and boxplot of crime rate](#crime-rate) might help. The boxplot indicates that more than 75% of the dataset is above 1. That is, 75% of the observed neighborhoods exhibit a crime for each person living in the area. Unless the data aims to cover areas with high crime rates (which is not the case), the crime rate must indicate a value expressed for more than one person, such as 1,000 or 100,000.
 
-The project also does not specify the type of crime measured by the crime rate variable. It could mean 0 to 13 crimes per a 1.000 or per a 100.000 depending on the seriousness of the crimes involved in this measurement.
+The project also does not specify the type of crime measured by the crime rate variable. It could mean $0$ to $13$ crimes per 1,000 or per 100,000 depending on the seriousness of the crimes involved in this measurement.
 
 
 ## Correlation Analysis
@@ -365,14 +362,14 @@ The project advises looking at whether there is a correlation between any of the
 A correlation matrix of the variables is computed and visualized as follows:
 
 ```{r}
-# correlation matrix
+# correlation
 
 ## matrix
 cor(df.housing, use = "complete.obs")
 
 ## visualization
 df.housing |>
-  ## use original column names
+  ### use original column names
   rename_with(~val.df.housing.original_colnames) |>
   cor(use = "complete.obs") |>
   ggcorrplot(
@@ -381,19 +378,19 @@ df.housing |>
     type = "upper"
   ) +
   labs(
-    title = "Correlation of Housing Market data variables"
+    title = "Correlation of Housing Market dataset variables"
   )
 
 ## coefficient of correlation
 val.cor.avg_rooms_median_home_value <- cor(df.housing$average_rooms, df.housing$median_home_value, use = "complete.obs")
 ```
 
-Other than a few very weak positive correlations between the variables, only one stands out significantly, which is the correlation between _median home value_ and _average rooms_ with a correlation coefficient of $0.8884$.
+Other than a few very weak positive correlations between the variables, only one stands out significantly, the correlation between _median home value_ and _average rooms_ with a correlation coefficient of $0.8897$.
 
 The following scatterplot also displays how close the data points of these two variables are positively correlated.
 
 ```{r, warning=FALSE}
-# scatterplot of the correlated variable pair
+## scatterplot of the correlated variable pair
 df.housing |>
   ggplot() +
   geom_point(
@@ -412,7 +409,7 @@ df.housing |>
 Last but not least, the coefficient of determination is:
 
 ```{r}
-# coefficient of determination
+## coefficient of determination
 val.cor.avg_rooms_median_home_value |>
   raise_to_power(2) |>
   print()
@@ -569,7 +566,7 @@ df.housing |>
   )
 ```
 
-It appears, that the imputation does not visibly affect the crime rate variable, and as for the average rooms, only one or two strange points are introduced.
+It appears, that the imputation does not visibly affect the _crime rate_ variable, and as for the _average rooms_, only one or two strange points are introduced.
 
 ```{r}
 # summary before replacement
@@ -577,7 +574,7 @@ df.housing |>
   select(crime_rate, average_rooms) |>
   summary()
 
-# replacement
+# actual replacement
 
 val.df.housing.crime_rate.median <- median(df.housing$crime_rate, na.rm = TRUE)
 val.df.housing.average_rooms.median <- median(df.housing$average_rooms, na.rm = TRUE)
@@ -604,7 +601,7 @@ df.housing.imputed |>
   summary()
 ```
 
-Also, the correlation of _average rooms_ and _median home value_ remains almost the same.
+Also, the correlation between _average rooms_ and _median home value_ remains almost the same.
 
 ```{r}
 # correlation of average rooms and median home value

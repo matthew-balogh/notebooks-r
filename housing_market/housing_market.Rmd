@@ -32,7 +32,7 @@ This document includes data analysis tasks related to the course project of [Int
 
 # About the Project
 
-According to the project overview, the goal is to get an understanding on how the characteristics of housing market influence other important characteristics such as the home value. In other words, using the available data, stakeholders want to infer and make predictions about the housing market in the observed environment.
+According to the project overview, the goal is to get an understanding on how the housing market characteristics influence other important factors such as the home value. In other words, using the available data, stakeholders want to infer and make predictions about the housing market in the observed environment.
 
 To do so, a dataset with the following variables is provided:
 
@@ -48,7 +48,7 @@ As the above list of variables shows, there are statistical measures, such as _r
 
 However, the variables that appear not to be statistical measures, such as `Public.Transport.Access` and `Number.of.Schools`, are constant values that apply for all the elements in the set, that is for all the housing units, with which each observation is associated.
 
-It appears that the observations represent some kind of areas, for example, neighborhoods, or blocks, which is not stated explicitly. For the rest of the analysis, keeping this aspect of the dataset abstract and not clearly specified, the term _housing area_ will be used.
+It appears that the observations represent some kind of areas, for example, neighborhoods, or blocks, which is not stated explicitly. For the rest of the analysis, keeping this aspect of the dataset abstract and not specified, the term _housing area_ will be used.
 
 In that light, we have a pre-collected data on housing areas, where each **housing area** has characteristics of:
 
@@ -71,11 +71,11 @@ read.csv("./data/housing_data.csv", check.names = FALSE) |>
   head(n = 10)
 ```
 
-As already noted, the type of housing areas and housing units, with which the observations are associated is unclear. We also do not know the currency or the scale in which the home values (`Median Home Value`) are expressed. The unit, in which the `Public Transport Access` variable is expressed is also unknown. The `Number of Schools` seems to be an obvious measure, however, the type of schools these number refer to is not known. `Crime Rate` is also a vague indicator - even though the project describes it as a per capita measurement, one might be suspicious looking at those high rates in the above sample of the dataset.
+As already noted, the type of housing areas and housing units, with which the observations are associated is unclear. We also do not know the currency or the scale in which the home values (`Median Home Value`) are expressed. The unit, in which the `Public Transport Access` variable is expressed is also unknown. The `Number of Schools` seems to be an obvious measure, however, the type of schools these numbers refer to is not known. `Crime Rate` is also a vague indicator - even though the project describes it as a per capita measurement, one might be suspicious looking at those high rates in the above sample of the dataset.
 
 As for the `Public Transport Access` variable, we could also think about it as a central measure of the housing units in the area. A constant value might indicate that the area encloses housing units that do not differ in physical location, while a central measure might indicate the aggregate of a housing area with related yet physically spread-out housing units.
 
-Until a more detailed investigation suggests otherwise, these concerns are considered as resolved and handled as follows:
+Until a more detailed investigation suggests otherwise, these concerns are considered resolved and handled as follows:
 
   - housing areas and enclosed housing units remain **unspecified**
   - home value is assumed to be expressed in **USD** yet:
