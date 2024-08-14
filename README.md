@@ -2,6 +2,8 @@
 
 This repository contains `R` notebooks related to brief _Data Science_ projects in various topics.
 
+  * Housing Market
+
 ## Housing Market
 
 In this notebook, I explored and analysed neighborhood related housing market data to:
@@ -25,7 +27,7 @@ According to the correlation matrix, the variable of _average rooms_ turned out 
 
 ### Linear Regression
 
-A linear regression model has been created which is based on the _average rooms_ predictor to predict _median home value_ in a linear fashion.
+A linear regression model has been created based on the _average rooms_ predictor to predict _median home value_ in a linear fashion.
 
 $$
 y(x)=3785.4+(7188.6\times{𝑥})
@@ -35,7 +37,7 @@ $$
 \text{MedianHomeValue}(\text{AverageRooms})=3785.4+(7188.6\times{\text{AverageRooms}})
 $$
 
-The regression equation exhibits a positive intercept and slope. According to it, each additional _(average) room_ results in a $ $7188.6$ increase in _(median) home value_.
+The regression equation exhibits a positive intercept and slope. According to them, each additional _(average) room_ results in a $ $7188.6$ increase in _(median) home value_.
 
 ![Linear regression of Average Rooms vs Median Home Value](./assets/readme/housing_market/linear_regression.png)
 
@@ -55,7 +57,7 @@ $$
 
 Considering the sufficiently large sample size ($n\approx{250}$) for each subgroup of neighborhoods, the standard normal distribution has been utilized to determine the z-scores associated with the Confidence Interval, within which the null hypothesis would not be rejected.
 
-The conclusion has been derived from the following diagram, which depicts that the z-scores associated with the observed difference of the two samples fall within the Confidence Interval and not within the Rejection Areas.
+The conclusion has been derived from the following diagram, which depicts that the z-scores associated with the observed difference of the two samples fall within the Confidence Interval and not within any of the Rejection Areas.
 
 That is, we attribute the observed difference solely to chance rather than a statistically significant observation.
 
